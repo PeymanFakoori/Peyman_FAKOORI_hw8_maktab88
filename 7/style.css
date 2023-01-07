@@ -1,0 +1,53 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+table {
+    border-collapse: collapse;
+    width: 1000px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 30px;
+    margin-bottom: 50px;
+}
+th{
+    padding: 5px;
+    border: 1px solid black;
+    text-align: center;
+}
+
+td{
+    padding: 5px;
+    border: 1px solid black;
+    text-align: center;
+}
+
+table{  
+    border: 1px solid black;
+    text-align: center;
+    padding: 5px;
+}
+.btn-container {
+    height: 30px;
+    width: 1000px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 30px;
+    margin-bottom: 50px;
+    align-content: center;
+    text-align: center;
+}
+.btn1 , .btn2 , .btn3{
+    padding: 5px;
+    margin: 20px;
+    width: 100px;
+    height: 30px;
+}
+.btn2{
+    background-color: aquamarine;
+}
+.btn3{
+    background-color: red;
+}
