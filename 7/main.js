@@ -1,38 +1,165 @@
-function makeUserDataTable(person) {
-    const table = document.querySelector("table");
-    const rows = document.getElementsByTagName("tr");
-    const len = rows.length;
-    for(let i = 1; i < len ; i++) {
-        tabelRow[1].remove();
-    }
-    person.forEach(function(person, index) {
-        const row = document.createElement("tr");
-        const tier = document.createElement("td");
-        const tierNodeText = document.createTextNode(`${index + 1}`);
-        tier.appendChild(tierNodeText);
-        row.appendChild(tier);
-        for (const value in person) {
-            const newCell = document.createElement("td");
-            const cellText = document.createTextNode(`${person[value]}`);
-            newCell.appendChild(cellText);
-            row.appendChild(newCell);
-        }
-        table.appendChild(row);
+function renderTable(sortBy = null) {
+  const thead = document.querySelector("thead");
+  const tbody = document.querySelector("tbody");
+  const users = [...userData];
+  tbody.innerHTML = "";
+  thead.innerHTML = "";
+  if (!!sortBy) {
+    users.sort((a, b) => {
+      const current = a[sortBy].toString();
+      const next = b[sortBy].toString();
+      return next.localeCompare(current, undefined, {
+        numeric: true,
+        sensitivity: "base",
+      });
+    });
+  }
+  if (userData.length === 0) return;
+  const tableColumn = ["row", ...Object.keys(users[0])]
+    .map((culomn) => {
+      if (culomn === "row") {
+        return `<th>${culomn}</th>`;
+      } else {
+        return `<th onclick ="renderTable('${culomn}')">${culomn}</th>`;
+      }
     })
+    .join("");
+
+  thead.innerHTML = `<tr> ${tableColumn} </tr>`;
+  for (let [index, user] of users.entries()) {
+    tbody.innerHTML += `<tr onclick = "renderReadUser(${user.uid})">
+            <td>${index + 1}</td>
+            <td>${user.uid}</td>
+            <td>${user.firstname}</td>
+            <td>${user.lastname}</td>
+            <td>${user.city}</td>
+            <td>${user.postalCode}</td>
+            <td>${user.phoneNumber}</td>
+            <td>${user.position}</td>
+         </tr>`;
+  }
 }
-makeUserDataTable(userData);
 
-const addBtb = document.getElementsByClassName("btn2")
-const changeBtn = document.getElementsByClassName("btn2")
-const deleteBtn = document.getElementsByClassName("btn3")
+renderTable();
+function renderReadUser(uid) {
+  const user = userData.find((user) => user.uid === uid);
+  modalHeader.textContent = "user info";
 
-const getCellValue = (tr, index) => tr.children[index].innerText || tr.children[index].textContent;
-const comparer = (index, value) => (a, b) => ((value1, value2) => 
-    value1 !== '' && value2 !== '' && !isNaN(value1) && !isNaN(value2) ? value1 - value2 : value1.toString().localeCompare(value2)
-    )(getCellValue(value ? a : b, index), getCellValue(value ? b : a, index));
-document.querySelectorAll('th').forEach(th => th.addEventListener('click', (() => {
-    const table = th.closest('table');
-    Array.from(table.querySelectorAll('tr:nth-child(n+2)'))
-        .sort(comparer(Array.from(th.parentNode.children).indexOf(th), userData.value = !userData.value))
-        .forEach(tr => table.appendChild(tr) );
-})));
+  modalBody.innerHTML = Object.keys(user)
+    .map((property) => `<p>${property}: ${user[property]}</p>`)
+    .join("");
+
+  modalFooter.innerHTML = `<button onclick ="removeUser(${uid})">Delete</button>    <button onclick="renderUpdateUser(${uid})" >Update</button>`;
+
+  modalOpen();
+}
+
+function removeUser(uid) {
+  const user = userData.find((user) => user.uid === uid);
+  userData = userData.filter((item) => item.uid !== user.uid);
+  renderTable();
+
+  modalClose();
+}
+
+function renderUpdateUser(uid) {
+  const user = userData.find((user) => user.uid === uid);
+
+  modalHeader.textContent = "Update";
+
+  modalBody.innerHTML = Object.keys(user)
+    .map((property) => {
+      if (property === "uid") {
+        return `<input type="text" id="${property}" class="updateInputs" value="${user[property]}" placeholder="${property}" disabled/>`;
+      }
+      return `<input type="text" id="${property}" class="updateInputs" value="${user[property]}" placeholder="${property}"/>`;
+    })
+    .join("");
+  modalFooter.innerHTML = `<button onclick="renderReadUser(${uid})">cancel</button>  
+    <button onclick="updateUser(${uid})">save</button>`;
+
+  modalOpen();
+}
+
+function updateUser(uid) {
+  const user = userData.find((user) => user.uid === uid);
+
+  const updateInputs = document.querySelectorAll(".updateInputs");
+
+  for (const input of updateInputs) {
+    if (input.value.trim() === "") return alert("invalid input");
+
+    if (input.id === "uid") {
+      user[input.id] = Number(input.value);
+      continue;
+    }
+
+    user[input.id] = input.value;
+  }
+
+  modalClose();
+
+  renderTable();
+}
+function renderCreateUser() {
+  resetModal();
+
+  modalHeader.textContent = "Create new User";
+
+  let properties = [
+    "uid",
+    "firstname",
+    "lastname",
+    "city",
+    "postalCode",
+    "phoneNumber",
+    "position",
+  ];
+
+  if (userData.length !== 0) properties = Object.keys(userData[0]);
+
+  modalBody.innerHTML = properties
+    .map((property) => {
+      if (property === "uid") {
+        return `<input type="number" min="0" id="${property}" class="createInputs" value="" placeholder="${property}"/>`;
+      }
+
+      return `<input type="text" id="${property}" class="createInputs" value="" placeholder="${property}"/>`;
+    })
+    .join("");
+
+  modalFooter.innerHTML = `
+      <button class="button" onclick="createUser()">save</button>
+      <button class="button" onclick="modalClose()">cancel</button>`;
+
+  modalOpen();
+}
+function createUser() {
+  const createInputs = document.querySelectorAll(".createInputs");
+
+  const newUser = {};
+
+  for (const input of createInputs) {
+    if (input.value.trim() === "") return alert("invalid input");
+
+    if (
+      input.id === "uid" &&
+      !!userData.find((user) => user.uid === Number(input.value))
+    ) {
+      return alert("duplicated user !");
+    }
+
+    if (input.id === "uid") {
+      newUser[input.id] = Number(input.value);
+      continue;
+    }
+
+    newUser[input.id] = input.value;
+  }
+
+  userData.push(newUser);
+
+  modalClose();
+
+  renderTable();
+}
